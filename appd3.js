@@ -1,22 +1,30 @@
-document.on('DOMContentLOaded', function() {
+document.addEventListener('DOMContentLOaded', function() {
     let workCount = 10;
     let guessCOunt = 4;
     let password = '';
 
-    const start = document.select('start')
-        start.on('click', () => {
-            const startScreen = d3.select('.start-screen')
-                startScreen.classed('hide', !startScreen.classed('hide'))
-                startScreen.classed('show', !startScreen.classed('show'))
+    const start = d3.select('#start')
+            start.on('click', () => {
+            const startScreen = d3.select('#start-screen')
+            const gameScreen = d3.select('#game-screen')
+                toggleClasses(startScreen, 'hide', 'show');
+                toggleClasses(gameScreen, 'hide', 'show');
             startGame();
         })
+    function toggleClasses (selector) {
+        for(let i = 1; i< arguments.length; i++) {
+            let classIsSet = selector.classed(arguments[i])
+            selector.classed(arguments[i], !classIsSet);
+
+        }
+    }
     function startGame() {
         //get random words and append them to the DOM
-        const wordList = d3.select('word-list')
+        const wordList = d3.select('#word-list')
         //'words' varible is from words.js
         const randomWords = getRandomValues(words, wordCount); 
         randomWords.forEach(word => {
-            wordList.append(li).text(word)
+            wordList.append("li").text(word)
         })
         //set a secret password and the guess count display
         password = getRandomValues(randomWords, 1)[0];
@@ -45,25 +53,26 @@ document.on('DOMContentLOaded', function() {
       }
     function setGuessCount(newCount) {
         guessCount = newCount;
-        d3.select('.guesses-remaining').text(`Guesses remaining: ${guessCount}.`)
+        d3.select('#guesses-remaining').text(`Guesses remaining: ${guessCount}.`)
     }
 
-    function updateGame(e) {
-        if (e.target.tagName === 'LI' && !d3.event.classed('disabled')) {
+    function updateGame() {
+        const target = d3.select(d3.event.target);
+        if (target.node().tagName === 'LI' && !target.classed('disabled')) {
           // grab guessed word, check it against password, update view
-          var guess = e.target.innerText;
-          var similarityScore = compareWords(guess, password);
-          e.target.classList.add('disabled');
-          e.target.innerText = guess + ' --> Matching Letters: ' + similarityScore;
+          const guess = target.text();
+          const similarityScore = compareWords(guess, password);
+          target.classed('disabled', true)
+              .text(guess + ' --> Matching Letters: ' + similarityScore);
           setGuessCount(guessCount - 1);
 
           // check whether the game is over
           if (similarityScore === password.length) {
-            toggleClasses(document.getElementById('winner'), 'hide', 'show');
-            this.removeEventListener('click', updateGame);
+            toggleClasses(d3.select('#winner'), 'hide', 'show');
+            d3.select(this).on('click', null);
           } else if (guessCount === 0) {
-            toggleClasses(document.getElementById('loser'), 'hide', 'show');
-            this.removeEventListener('click', updateGame);
+            toggleClasses(d3.select('#loser'), 'hide', 'show');
+            d3.select(this).on('click', null);
           }
         }
     }
@@ -77,4 +86,4 @@ document.on('DOMContentLOaded', function() {
         }
         return count;
     }
-}.)
+})
